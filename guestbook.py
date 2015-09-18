@@ -88,10 +88,7 @@ class TimeEntry(ndb.Model):
 #         self.response.write(template.render(template_values))
 
 
-
-
-class ProjectManager(webapp2.RequestHandler):
-
+class ClockManager(webapp2.RequestHandler):
     def get(self):
         time.sleep(0.1)
         project_query = Project.query()
@@ -100,6 +97,12 @@ class ProjectManager(webapp2.RequestHandler):
         items = list()
         if projects:
             for proj in projects:
+
+                # proj_desc = {
+                #     'name': proj.name,
+                #     subprojs: [ ]
+                # }
+
                 items.append(proj)
                 subproject_query = SubProject.query(ancestor=project_key(proj.name))
                 subprojects = subproject_query.fetch()
@@ -117,7 +120,43 @@ class ProjectManager(webapp2.RequestHandler):
             'url_linktext': url_linktext,
         }
 
-        template = JINJA_ENVIRONMENT.get_template('index.html')
+        template = JINJA_ENVIRONMENT.get_template('clock.html')
+        self.response.write(template.render(template_values))
+
+class ProjectManager(webapp2.RequestHandler):
+
+    def get(self):
+        time.sleep(0.1)
+        project_query = Project.query()
+        projects = project_query.fetch()
+
+        items = list()
+        if projects:
+            for proj in projects:
+
+                # proj_desc = {
+                #     'name': proj.name,
+                #     subprojs: [ ]
+                # }
+
+                items.append(proj)
+                subproject_query = SubProject.query(ancestor=project_key(proj.name))
+                subprojects = subproject_query.fetch()
+                print subprojects
+                if subprojects:
+                    for subproj in subprojects:
+                        items.append(subproj)
+
+        url = users.create_login_url(self.request.uri)
+        url_linktext = 'Login'
+
+        template_values = {
+            'items': items,
+            'url': url,
+            'url_linktext': url_linktext,
+        }
+
+        template = JINJA_ENVIRONMENT.get_template('projectmanager.html')
         self.response.write(template.render(template_values))
 
     def post(self):
@@ -163,5 +202,6 @@ class ProjectManager(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', ProjectManager),
-    ('/sign', ProjectManager),
+    ('/timer', ClockManager),
+    ('/newproject', ProjectManager),
 ], debug=True)
