@@ -48,14 +48,19 @@
     </div>
     <div class="container">
 
-      {% for project in projects %}
+      {% for item in items %}
       <div class="row">
-        <blockquote>{{ project.name }}</blockquote>
+        <blockquote>{{ item.name }}</blockquote>
       </div>
       {% endfor %}
 
       <form action="/sign" method="post">
-        <div><textarea name="content" class="input-block-level" rows="3"></textarea></div>
+        <div><label for="project">project</label>
+          <textarea name="project" class="input-block-level" rows="1"></textarea></div>
+        <div><label for="subproject">subproject</label>
+          <textarea name="subproject" class="input-block-level" rows="1"></textarea></div>
+        <div><label for="description">description</label>
+          <textarea name="description" class="input-block-level" rows="1"></textarea></div>
         <div><input type="submit" class="btn btn-large btn-primary" value="Add Project"></div>
       </form>
 
