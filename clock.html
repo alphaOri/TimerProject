@@ -14,12 +14,28 @@
         margin-bottom: 10px;
         border-left-color: #bbb;
       }
+      .timerButtons, .timeInput, .clock {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .selector {
+        margin: 20px 0;
+      }
+      .timeLabel {
+        font-size: 20px;
+      }
+      .timeInput input {
+        width: 25px;
+      }
+      .timeInput button {
+        margin-bottom: 10px;
+      }
       .numbers {
         border-style: ridge;    /* options are none, dotted, dashed, solid, double, groove, ridge, inset, outset */
         border-width: 2px;
         border-color: #666666;  /* change the border color using the hexadecimal color codes for HTML */
         background: #222222;    /* change the background color using the hexadecimal color codes for HTML */
-        padding: 2px 0px;
+        padding: 5px 0px;
         width: 55px;
         text-align: center; 
         font-family: Arial; 
@@ -39,10 +55,10 @@
         color: #DDDDDD;       /* change color using the hexadecimal color codes for HTML */
         background: transparent;    /* change the background color using the hexadecimal color codes for HTML */
     }
-    #table {
+    .clock {
         width: 400px;
         border: none;    /* options are none, dotted, dashed, solid, double, groove, ridge, inset, outset */
-        margin: 0px auto;
+        margin: 0px auto 20px auto;
         position: relative;    /* leave as "relative" to keep timer centered on your page, or change to "absolute" then change the values of the "top" and "left" properties to position the timer */
         top: 0px;        /* change to position the timer */
         left: 0px;       /* change to position the timer; delete this property and it's value to keep timer centered on page */
@@ -62,7 +78,7 @@
         document.getElementById('dsec').innerHTML=0;
       }
 
-      function countdown() {
+      function start() {
         // TODO(sarah): Error checking
         var hours = Number(document.getElementById("timehours").value);
         var minutes = Number(document.getElementById("timeminutes").value);
@@ -70,6 +86,18 @@
         date.setHours(date.getHours() + hours);
         date.setMinutes(date.getMinutes() + minutes);
         runcountdown();
+      }
+
+      function stop() {
+        // TODO
+      }
+
+      function pause() {
+        // TODO
+      }
+
+      function cancel() {
+
       }
 
       function runcountdown(){
@@ -124,19 +152,36 @@
       </div>
     </div>
     <div class="container">
-      <select>
-        {% for item in items %}
-        <option value="{{ item.name }}">{{ item.name }}</option>
-        {% endfor %}
-      </select>
 
-      <div><label>Time: </label>
-        <input type="text" id="timehours" />
-        <input type="text" id="timeminutes" />
+      <div class="selector">
+        <div>
+        <label>Project: </label>
+        <select>
+          {% for item in items %}
+          <option value="{{ item.name }}">{{ item.name }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Subproject: </label>
+        <select>
+          <option value="TODO">TODO</option>
+        </select>
+        </div>
+
+        <div>
+          <label onclick="javascript;;">Add project</label>
+        <div>
       </div>
-      <div><button class="btn btn-large btn-primary" onclick="countdown()">Start</button></div>
 
-      <table id="table" border="0">
+      <div class="timeInput"><label class="timeLabel">Time: </label>
+        <input type="text" id="timehours" />
+        <label>hrs</label>
+        <input type="text" id="timeminutes"/>
+        <label>min</label>
+        <button class="btn btn-primary" onclick="start()">Start</button>
+      </div>
+
+      <table class="clock" id="table" border="0">
         <tr>
             <td align="center" colspan="6"><div class="numbers" id="count2" style="padding: 10px; "></div></td>
         </tr>
@@ -155,6 +200,12 @@
             <td align="center" ><div class="title" ></div></td>
         </tr>
       </table>
+
+      <div class="timerButtons">
+        <button class="btn btn-primary" onclick="stop()">Stop</button>
+        <button class="btn" onclick="pause()">Pause</button>
+        <button class="btn" onclick="cancel()">Cancel</button>
+      </div>
 
       <hr>
 
