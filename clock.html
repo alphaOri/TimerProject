@@ -64,6 +64,7 @@
         left: 0px;       /* change to position the timer; delete this property and it's value to keep timer centered on page */
     }
     </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script type="text/javascript">
 
       var endMessage="Time's up!"; // message shown when countdown is done
@@ -72,16 +73,16 @@
 
       // set up initial view to 0:00:00
       function initialize() {
-        document.getElementById('count2').style.display="none";
-        document.getElementById('dhour').innerHTML=0;
-        document.getElementById('dmin').innerHTML=0;
-        document.getElementById('dsec').innerHTML=0;
+        $('#count2').hide()
+        $('#dhour').text('0');
+        $('#dmin').text('0');
+        $('#dsec').text('0');
       }
 
       function start() {
         // TODO(sarah): Error checking
-        var hours = Number(document.getElementById("timehours").value);
-        var minutes = Number(document.getElementById("timeminutes").value);
+        var hours = Number($('#timehours').val());
+        var minutes = Number($('#timeminutes').val());
         date = new Date();
         date.setHours(date.getHours() + hours);
         date.setMinutes(date.getMinutes() + minutes);
@@ -111,26 +112,26 @@
           var dmin=Math.floor(((dd%(60*60*1000*24))%(60*60*1000))/(60*1000)*1);
           var dsec=Math.floor((((dd%(60*60*1000*24))%(60*60*1000))%(60*1000))/1000*1);
           if(dday<=0&&dhour<=0&&dmin<=0&&dsec<=0){
-              document.getElementById('count2').innerHTML=endMessage;
-              document.getElementById('count2').style.display="block";
-              document.getElementById('count2').style.width="390px";
-              document.getElementById('dhour').style.display="none";
-              document.getElementById('dmin').style.display="none";
-              document.getElementById('dsec').style.display="none";
-              document.getElementById('days').style.display="none";
-              document.getElementById('hours').style.display="none";
-              document.getElementById('minutes').style.display="none";
-              document.getElementById('seconds').style.display="none";
-              document.getElementById('spacer1').style.display="none";
-              document.getElementById('spacer2').style.display="none";
+            $('#count2').text(endMessage);
+            $('#count2').show();
+            $('#count2').wifth(390);
+            $('#dhour').hide();
+            $('#dmin').hide();
+            $('#dsec').hide();
+            $('#days').hide();
+            $('#hours').hide();
+            $('#minutes').hide();
+            $('#seconds').hide();
+            $('#spacer1').hide();
+            $('#spacer2').hide();
               return;
           }
           else {
-              document.getElementById('count2').style.display="none";
-              document.getElementById('dhour').innerHTML=dhour;
-              document.getElementById('dmin').innerHTML=dmin;
-              document.getElementById('dsec').innerHTML=dsec;
-              setTimeout(function(){ runcountdown(); }, 1000);
+            $('#count2').hide();
+            $('#dhour').text(dhour);
+            $('#dmin').text(dmin);
+            $('#dsec').text(dsec);
+            setTimeout(function(){ runcountdown(); }, 1000);
           }
       }
       </script>
