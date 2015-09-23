@@ -7,6 +7,7 @@ from google.appengine.ext import ndb
 import jinja2
 import webapp2
 import time
+import logging
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -43,7 +44,7 @@ class Greeting(ndb.Model):
 
 class Project(ndb.Model):
     """ notes """
-    name = ndb.StringProperty(indexed=False)
+    name = ndb.StringProperty(indexed=True)
     description = ndb.StringProperty(indexed=False)
 
 class SubProject(ndb.Model):
@@ -55,8 +56,8 @@ class TimeEntry(ndb.Model):
     """ notes """
     start_date = ndb.DateTimeProperty(auto_now_add=False)
     end_date = ndb.DateTimeProperty(auto_now_add=False)
-    parent_sub_project = ndb.StructuredProperty(SubProject)
     comment = ndb.StringProperty(indexed=False)
+    belongs_to = ndb.KeyProperty(kind=SubProject, repeated=True)
     
 
 # class MainPage(webapp2.RequestHandler):
@@ -104,7 +105,7 @@ class ClockManager(webapp2.RequestHandler):
                 # }
 
                 items.append(proj)
-                subproject_query = SubProject.query(ancestor=project_key(proj.name))
+                subproject_query = SubProject.query(ancestor=proj.key)
                 subprojects = subproject_query.fetch()
                 print subprojects
                 if subprojects:
@@ -131,6 +132,7 @@ class ProjectManager(webapp2.RequestHandler):
         projects = project_query.fetch()
 
         items = list()
+        print projects
         if projects:
             for proj in projects:
 
@@ -140,16 +142,15 @@ class ProjectManager(webapp2.RequestHandler):
                 # }
 
                 items.append(proj)
-                subproject_query = SubProject.query(ancestor=project_key(proj.name))
-                subprojects = subproject_query.fetch()
-                print subprojects
+                subprojects = SubProject.query(ancestor=proj.key).fetch()
+                logging.debug("Subpropject: %d", len(subprojects))
                 if subprojects:
                     for subproj in subprojects:
                         items.append(subproj)
 
         url = users.create_login_url(self.request.uri)
         url_linktext = 'Login'
-
+        print items
         template_values = {
             'items': items,
             'url': url,
@@ -180,9 +181,10 @@ class ProjectManager(webapp2.RequestHandler):
             exit("ERROR: No project provided.")
         else:
             if self.request.get('subproject'):
-                proj_key = project_key(self.request.get('project'))
-                if proj_key:
-                    subproject = SubProject(parent=proj_key)
+                proj = Project.query(Project.name==self.request.get('project')).fetch(1)
+                if proj:
+                    subproject = SubProject(parent=proj.pop().key)
+                    #logging.debug("proj_key = %s", str(proj_key))
                     subproject.name = self.request.get('subproject')
                     subproject.description = self.request.get('description')
                     subproject.put()
@@ -199,9 +201,34 @@ class ProjectManager(webapp2.RequestHandler):
         #query_params = {'guestbook_name': guestbook_name}
         self.redirect('/?')
 
+    def get_time_entries(self):
+        return TimeEntry.query(TimeEntry.belongs_to==self.key)
+
+class TimeManager(webapp2.RequestHandler):
+
+    def post(self):
+        # create a time entry object with dates and comment
+        time_entry = TimeEntry(start_date=self.request.get('start_date'), 
+            end_date=self.request.get('end_date'))
+        if self.request.get('comment'):
+            time_entry.comment=self.request.get('comment')
+        # get the keys for the subprojects it belongs to and append into belongs_to
+        for item in allocations:
+            proj = Project.query(Project.name==item.project).fetch(1)
+            if proj:
+                subproj = SubProject.query(SubProject.name==item.subproject, ancestor=proj.pop().key).fetch(1)
+            else:
+                exit("ERROR: No project with that name.")
+            if subproj:
+                time_entry.belongs_to.append(subproj.key)
+        # put the new time entry
+        time_entry.put()
+
 
 app = webapp2.WSGIApplication([
     ('/', ProjectManager),
     ('/timer', ClockManager),
+    ('/sign', ProjectManager),
     ('/newproject', ProjectManager),
+    ('/timeentry', TimeManager),
 ], debug=True)
