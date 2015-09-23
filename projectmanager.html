@@ -48,9 +48,12 @@
     </div>
     <div class="container">
 
-      {% for item in items %}
+      {% for item in ret_list %}
       <div class="row">
-        <blockquote>{{ item.name }}</blockquote>
+        <blockquote>{{ item.project }}</blockquote>
+        {% for sub_item in item.subprojects %}
+          <blockquote>{{ sub_item }}</blockquote>
+        {% endfor %}
       </div>
       {% endfor %}
 

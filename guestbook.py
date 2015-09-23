@@ -131,28 +131,25 @@ class ProjectManager(webapp2.RequestHandler):
         project_query = Project.query()
         projects = project_query.fetch()
 
-        items = list()
-        print projects
+        ret_list = []
         if projects:
             for proj in projects:
 
-                # proj_desc = {
-                #     'name': proj.name,
-                #     subprojs: [ ]
-                # }
+                sub_list = []
 
-                items.append(proj)
                 subprojects = SubProject.query(ancestor=proj.key).fetch()
-                logging.debug("Subpropject: %d", len(subprojects))
                 if subprojects:
                     for subproj in subprojects:
-                        items.append(subproj)
+                        sub_list.append(subproj.name)
+                ret_list.append({
+                    'project': proj.name,
+                    'subprojects': sub_list
+                })
 
         url = users.create_login_url(self.request.uri)
         url_linktext = 'Login'
-        print items
         template_values = {
-            'items': items,
+            'ret_list': ret_list,
             'url': url,
             'url_linktext': url_linktext,
         }
