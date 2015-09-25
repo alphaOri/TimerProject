@@ -14,12 +14,21 @@
         margin-bottom: 10px;
         border-left-color: #bbb;
       }
+      .page {
+        margin-top: 20px;
+      }
       .timerButtons, .timeInput, .clock, .endMessageContainer {
         text-align: center;
         margin-bottom: 20px;
       }
-      .selector {
+      .projects {
         margin: 20px 0;
+      }
+      .projects button {
+        margin-bottom: 10px;
+      }
+      .projectList {
+        margin-bottom: 10px;
       }
       .timeLabel {
         font-size: 20px;
@@ -66,6 +75,9 @@
         top: 0px;        /* change to position the timer */
         left: 0px;       /* change to position the timer; delete this property and it's value to keep timer centered on page */
     }
+    .projectList span {
+      display: inline-block;
+    }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script type="text/javascript">
@@ -91,7 +103,8 @@
         });
 
         setRunning(false);
-        $('.endMessage').hide()
+        $('#projectList').hide();
+        $('.endMessageContainer').hide()
         $('#dhour').text('0');
         $('#dmin').text('0');
         $('#dsec').text('0');
@@ -124,6 +137,29 @@
         return '<option value="' + value + '">' + text + '</option>';
       }
 
+      function addProject() {
+        $('#projectList').show();
+        // TODO error checking
+        var projectIndex = $('#projectselect').val();
+        var subprojectIndex = $('#subprojectselect').val();
+        if (projectIndex < 0) {
+          alert('Invalid project selected');
+          return;
+        }
+        var project = projects[projectIndex];
+        if (subprojectIndex < 0 || subprojectIndex >= project.subprojects.length) {
+          alert('Invalid subproject selected');
+          return;
+        }
+        var subproject = project.subprojects[subprojectIndex];
+        var row = '<div class="projectRow">'
+            + '<span>' + project.name + '</span>'
+            + '<span> --- </span>'
+            + '<span>' + subproject.name + '</span>'
+            + '</div>';
+        $('.projectList').append(row);
+      }
+
       function start() {
         stopTimer = false;
         setRunning(true);
@@ -151,10 +187,11 @@
         stopTimer = true;
         setRunning(false);
 
-        $('.endMessage').show();
+        $('.endMessageContainer').show();
         $('.endMessage').width(390);
 
         if(logTime) {
+          // TODO check that a project/subproject was selected
           // TODO log data
         }
       }
@@ -179,7 +216,6 @@
         if(dday<=0&&dhour<=0&&dmin<=0&&dsec<=0){
           finish();
         } else {
-          $('.endMessage').hide();
           $('#dhour').text(dhour);
           $('#dmin').text(dmin);
           $('#dsec').text(dsec);
@@ -204,23 +240,7 @@
         </div>
       </div>
     </div>
-    <div class="container">
-
-      <div class="selector">
-        <div>
-          <label>Project: </label>
-          <select id='projectselect' onchange='selectProject()'></select>
-
-          <label>Subproject: </label>
-          <select id='subprojectselect'>
-            <option value="0">Select a project</option>
-          </select>
-        </div>
-
-        <div>
-          <label>Add project</label>
-        </div>
-      </div>
+    <div class="container page">
 
       <div class="timeInput">
         <label class="timeLabel">Time: </label>
@@ -256,6 +276,26 @@
         <button class="btn btn-primary" onclick="finish()">Finish</button>
         <button class="btn" onclick="pause()">Pause</button>
         <button class="btn" onclick="cancel()">Cancel</button>
+      </div>
+
+      <div class="projects">
+        <h3>Allocated Projects</h3>
+
+        <div class="projectList"></div>
+
+        <div>
+          <label>Project: </label>
+          <select id='projectselect' onchange='selectProject()'></select>
+
+          <label>Subproject: </label>
+          <select id='subprojectselect'>
+            <option value="0">Select a project</option>
+          </select>
+
+          <button class="btn" onclick="addProject()">Add</button>
+        </div>
+
+        <div><a href="/manageProjects">Manage Projects</a></div>
       </div>
 
       <hr>

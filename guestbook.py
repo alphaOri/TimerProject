@@ -247,6 +247,7 @@ class TimeManager(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', ProjectManager),
+    ('/manageProjects', ProjectManager),
     ('/timer', ClockManager),
     ('/sign', ProjectManager),
     ('/newproject', ProjectManager),
