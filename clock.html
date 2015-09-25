@@ -71,12 +71,45 @@
 
       var date; // Date we are counting down to.
 
+      var projects; // The projects to choose from
+
       // set up initial view to 0:00:00
       function initialize() {
+        $.get('/projects', function(response) {
+          projects = JSON.parse(response);
+          console.log(projects);
+          $('#projectselect').empty();
+          $('#projectselect').append(createOption("", "-1"));
+          for (index in projects) {
+            $('#projectselect').append(createOption(projects[index].name, index));
+          }
+        });
+
         $('#count2').hide()
         $('#dhour').text('0');
         $('#dmin').text('0');
         $('#dsec').text('0');
+      }
+
+      function selectProject() {
+        $('#subprojectselect').empty();
+        var selectedProject = $('#projectselect').val();
+        if(selectedProject < 0) {
+          $('#subprojectselect').append(createOption('Select a project', '-1'));
+          return;
+        }
+        var subprojects = projects[selectedProject].subprojects;
+        if(subprojects.length == 0) {
+          $('#subprojectselect').append(createOption('No subprojects', '0'));
+          return;
+        }
+        for (index in subprojects) {
+          $('#subprojectselect').append(createOption(subprojects[index].name, index));
+        }
+      }
+
+      function createOption(text, value) {
+        return '<option value="' + value + '">' + text + '</option>';
       }
 
       function start() {
@@ -157,15 +190,12 @@
       <div class="selector">
         <div>
         <label>Project: </label>
-        <select>
-          {% for item in items %}
-          <option value="{{ item.name }}">{{ item.name }}</option>
-          {% endfor %}
+        <select id='projectselect' onchange='selectProject()'>
         </select>
 
         <label>Subproject: </label>
-        <select>
-          <option value="TODO">TODO</option>
+        <select id='subprojectselect'>
+          <option value="0">Select a project</option>
         </select>
         </div>
 
