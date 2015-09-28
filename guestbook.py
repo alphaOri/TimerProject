@@ -8,6 +8,7 @@ import jinja2
 import webapp2
 import time
 import logging
+import json
 
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -210,6 +211,8 @@ class TimeManager(webapp2.RequestHandler):
         if self.request.get('comment'):
             time_entry.comment=self.request.get('comment')
         # get the keys for the subprojects it belongs to and append into belongs_to
+        allocation_string = self.request.get('allocations')
+        allocations = json.loads(allocation_string)
         for item in allocations:
             proj = Project.query(Project.name==item.project).fetch(1)
             if proj:
