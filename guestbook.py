@@ -125,6 +125,28 @@ class ClockManager(webapp2.RequestHandler):
         template = JINJA_ENVIRONMENT.get_template('clock.html')
         self.response.write(template.render(template_values))
 
+class ProjectLister(webapp2.RequestHandler):
+    def get(self):
+        time.sleep(0.1)
+        project_query = Project.query()
+        projects = project_query.fetch()
+
+        ret_list = []
+        if projects:
+            for proj in projects:
+
+                sub_list = []
+
+                subprojects = SubProject.query(ancestor=proj.key).fetch()
+                if subprojects:
+                    for subproj in subprojects:
+                        sub_list.append({ 'name': subproj.name })
+                ret_list.append({
+                    'name': proj.name,
+                    'subprojects': sub_list
+                })
+        self.response.write(json.dumps(ret_list))
+
 class ProjectManager(webapp2.RequestHandler):
 
     def get(self):
@@ -227,8 +249,10 @@ class TimeManager(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', ProjectManager),
+    ('/manageProjects', ProjectManager),
     ('/timer', ClockManager),
     ('/sign', ProjectManager),
     ('/newproject', ProjectManager),
     ('/timeentry', TimeManager),
+    ('/projects', ProjectLister)
 ], debug=True)

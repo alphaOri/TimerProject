@@ -14,12 +14,21 @@
         margin-bottom: 10px;
         border-left-color: #bbb;
       }
-      .timerButtons, .timeInput, .clock {
+      .page {
+        margin-top: 20px;
+      }
+      .timerButtons, .timeInput, .clock, .endMessageContainer {
         text-align: center;
         margin-bottom: 20px;
       }
-      .selector {
+      .projects {
         margin: 20px 0;
+      }
+      .projects button {
+        margin-bottom: 10px;
+      }
+      .projectList {
+        margin-bottom: 10px;
       }
       .timeLabel {
         font-size: 20px;
@@ -30,7 +39,10 @@
       .timeInput button {
         margin-bottom: 10px;
       }
-      .numbers {
+      .endMessage {
+        display: inline-block;
+      }
+      .numbers, .endMessage {
         border-style: ridge;    /* options are none, dotted, dashed, solid, double, groove, ridge, inset, outset */
         border-width: 2px;
         border-color: #666666;  /* change the border color using the hexadecimal color codes for HTML */
@@ -63,23 +75,94 @@
         top: 0px;        /* change to position the timer */
         left: 0px;       /* change to position the timer; delete this property and it's value to keep timer centered on page */
     }
+    .projectList span {
+      display: inline-block;
+    }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script type="text/javascript">
 
       var endMessage="Time's up!"; // message shown when countdown is done
 
+      var stopTimer = false; // If true, the timer should be stopped when possible
+
       var date; // Date we are counting down to.
+
+      var projects; // The projects to choose from
 
       // set up initial view to 0:00:00
       function initialize() {
-        $('#count2').hide()
+        $.get('/projects', function(response) {
+          projects = JSON.parse(response);
+          console.log(projects);
+          $('#projectselect').empty();
+          $('#projectselect').append(createOption("", "-1"));
+          for (index in projects) {
+            $('#projectselect').append(createOption(projects[index].name, index));
+          }
+        });
+
+        setRunning(false);
+        $('#projectList').hide();
+        $('.endMessageContainer').hide()
         $('#dhour').text('0');
         $('#dmin').text('0');
         $('#dsec').text('0');
       }
 
+      function setRunning(running) {
+        $('.timerButtons').toggle(running);
+        $('.timeInput').toggle(!running);
+        $('.clock').toggle(running);
+      }
+
+      function selectProject() {
+        $('#subprojectselect').empty();
+        var selectedProject = $('#projectselect').val();
+        if(selectedProject < 0) {
+          $('#subprojectselect').append(createOption('Select a project', '-1'));
+          return;
+        }
+        var subprojects = projects[selectedProject].subprojects;
+        if(subprojects.length == 0) {
+          $('#subprojectselect').append(createOption('No subprojects', '0'));
+          return;
+        }
+        for (index in subprojects) {
+          $('#subprojectselect').append(createOption(subprojects[index].name, index));
+        }
+      }
+
+      function createOption(text, value) {
+        return '<option value="' + value + '">' + text + '</option>';
+      }
+
+      function addProject() {
+        $('#projectList').show();
+        // TODO error checking
+        var projectIndex = $('#projectselect').val();
+        var subprojectIndex = $('#subprojectselect').val();
+        if (projectIndex < 0) {
+          alert('Invalid project selected');
+          return;
+        }
+        var project = projects[projectIndex];
+        if (subprojectIndex < 0 || subprojectIndex >= project.subprojects.length) {
+          alert('Invalid subproject selected');
+          return;
+        }
+        var subproject = project.subprojects[subprojectIndex];
+        var row = '<div class="projectRow">'
+            + '<span>' + project.name + '</span>'
+            + '<span> --- </span>'
+            + '<span>' + subproject.name + '</span>'
+            + '</div>';
+        $('.projectList').append(row);
+      }
+
       function start() {
+        stopTimer = false;
+        setRunning(true);
         // TODO(sarah): Error checking
         var hours = Number($('#timehours').val());
         var minutes = Number($('#timeminutes').val());
@@ -89,50 +172,55 @@
         runcountdown();
       }
 
-      function stop() {
-        // TODO
+      function finish() {
+        $('.endMessage').text('Time saved');
+        stop(true);
+      }
+
+      function cancel() {
+        // TODO confirm
+        $('.endMessage').text('Time not saved');
+        stop(false);
+      }
+
+      function stop(logTime) {
+        stopTimer = true;
+        setRunning(false);
+
+        $('.endMessageContainer').show();
+        $('.endMessage').width(390);
+
+        if(logTime) {
+          // TODO check that a project/subproject was selected
+          // TODO log data
+        }
       }
 
       function pause() {
         // TODO
       }
 
-      function cancel() {
-
-      }
-
       function runcountdown(){
-          var today=new Date();
-          var todayy=today.getYear();
-          var todaymilli=Date.parse(today);
-          var futuremilli=Date.parse(date);
-          var dd=futuremilli-todaymilli;
-          var dday=Math.floor(dd/(60*60*1000*24)*1);
-          var dhour=Math.floor((dd%(60*60*1000*24))/(60*60*1000)*1);
-          var dmin=Math.floor(((dd%(60*60*1000*24))%(60*60*1000))/(60*1000)*1);
-          var dsec=Math.floor((((dd%(60*60*1000*24))%(60*60*1000))%(60*1000))/1000*1);
-          if(dday<=0&&dhour<=0&&dmin<=0&&dsec<=0){
-            $('#count2').text(endMessage);
-            $('#count2').show();
-            $('#count2').wifth(390);
-            $('#dhour').hide();
-            $('#dmin').hide();
-            $('#dsec').hide();
-            $('#days').hide();
-            $('#hours').hide();
-            $('#minutes').hide();
-            $('#seconds').hide();
-            $('#spacer1').hide();
-            $('#spacer2').hide();
-              return;
-          }
-          else {
-            $('#count2').hide();
-            $('#dhour').text(dhour);
-            $('#dmin').text(dmin);
-            $('#dsec').text(dsec);
-            setTimeout(function(){ runcountdown(); }, 1000);
-          }
+        if (stopTimer) {
+          return;
+        }
+        var today=new Date();
+        var todayy=today.getYear();
+        var todaymilli=Date.parse(today);
+        var futuremilli=Date.parse(date);
+        var dd=futuremilli-todaymilli;
+        var dday=Math.floor(dd/(60*60*1000*24)*1);
+        var dhour=Math.floor((dd%(60*60*1000*24))/(60*60*1000)*1);
+        var dmin=Math.floor(((dd%(60*60*1000*24))%(60*60*1000))/(60*1000)*1);
+        var dsec=Math.floor((((dd%(60*60*1000*24))%(60*60*1000))%(60*1000))/1000*1);
+        if(dday<=0&&dhour<=0&&dmin<=0&&dsec<=0){
+          finish();
+        } else {
+          $('#dhour').text(dhour);
+          $('#dmin').text(dmin);
+          $('#dsec').text(dsec);
+          setTimeout(function(){ runcountdown(); }, 1000);
+        }
       }
       </script>
   </head>
@@ -145,47 +233,29 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="brand" href="#">App Engine Guestbook</a>
+          <a class="brand" href="#">Project Timer</a>
           <div class="nav-collapse collapse pull-right">
             <a href="{{ url|safe }}" class="btn">{{ url_linktext }}</a>
           </div>
         </div>
       </div>
     </div>
-    <div class="container">
+    <div class="container page">
 
-      <div class="selector">
-        <div>
-        <label>Project: </label>
-        <select>
-          {% for item in items %}
-          <option value="{{ item.name }}">{{ item.name }}</option>
-          {% endfor %}
-        </select>
-
-        <label>Subproject: </label>
-        <select>
-          <option value="TODO">TODO</option>
-        </select>
-        </div>
-
-        <div>
-          <label onclick="javascript;;">Add project</label>
-        <div>
-      </div>
-
-      <div class="timeInput"><label class="timeLabel">Time: </label>
-        <input type="text" id="timehours" />
+      <div class="timeInput">
+        <label class="timeLabel">Time: </label>
+          <input type="text" id="timehours" />
         <label>hrs</label>
-        <input type="text" id="timeminutes"/>
+          <input type="text" id="timeminutes"/>
         <label>min</label>
         <button class="btn btn-primary" onclick="start()">Start</button>
       </div>
 
-      <table class="clock" id="table" border="0">
-        <tr>
-            <td align="center" colspan="6"><div class="numbers" id="count2" style="padding: 10px; "></div></td>
-        </tr>
+      <div class="endMessageContainer" style="padding: 10px; ">
+        <span class="endMessage"></span>
+      </div>
+
+      <table class="clock" border="0">
         <tr id="spacer1">
             <td align="center" ><div class="title" ></div></td>
             <td align="center" ><div class="numbers" id="dhour">0</div></td>
@@ -203,9 +273,29 @@
       </table>
 
       <div class="timerButtons">
-        <button class="btn btn-primary" onclick="stop()">Stop</button>
+        <button class="btn btn-primary" onclick="finish()">Finish</button>
         <button class="btn" onclick="pause()">Pause</button>
         <button class="btn" onclick="cancel()">Cancel</button>
+      </div>
+
+      <div class="projects">
+        <h3>Allocated Projects</h3>
+
+        <div class="projectList"></div>
+
+        <div>
+          <label>Project: </label>
+          <select id='projectselect' onchange='selectProject()'></select>
+
+          <label>Subproject: </label>
+          <select id='subprojectselect'>
+            <option value="0">Select a project</option>
+          </select>
+
+          <button class="btn" onclick="addProject()">Add</button>
+        </div>
+
+        <div><a href="/manageProjects">Manage Projects</a></div>
       </div>
 
       <hr>

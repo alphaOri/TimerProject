@@ -620,13 +620,6 @@ a:focus {
   *zoom: 1;
 }
 
-.container:before,
-.container:after {
-  display: table;
-  line-height: 0;
-  content: "";
-}
-
 .container:after {
   clear: both;
 }
